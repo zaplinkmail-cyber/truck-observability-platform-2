@@ -1,19 +1,18 @@
 version: '3.8'
 
 services:
-  # Jaeger Backend
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger
     ports:
-      - "16686:16686"  # Jaeger UI
-      - "6831:6831/udp"  # Jaeger collector (for OpenTelemetry)
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP  ← we use this
     environment:
-      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
     networks:
       - observability
 
-  # Truck Service
   truck-service:
     build:
       context: .
@@ -25,9 +24,8 @@ services:
     ports:
       - "5001:5001"
     environment:
-      - JAEGER_AGENT_HOST=jaeger
-      - JAEGER_AGENT_PORT=6831
-      - SERVICE_NAME=truck_service
+      - JAEGER_HOST=jaeger
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
       - PYTHONUNBUFFERED=1
     depends_on:
       - jaeger
@@ -35,7 +33,6 @@ services:
       - observability
     command: python app.py
 
-  # Shipment Service
   shipment-service:
     build:
       context: .
@@ -47,9 +44,8 @@ services:
     ports:
       - "5002:5002"
     environment:
-      - JAEGER_AGENT_HOST=jaeger
-      - JAEGER_AGENT_PORT=6831
-      - SERVICE_NAME=shipment_service
+      - JAEGER_HOST=jaeger
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
       - PYTHONUNBUFFERED=1
     depends_on:
       - jaeger
@@ -59,7 +55,6 @@ services:
       - observability
     command: python app.py
 
-  # Driver Service
   driver-service:
     build:
       context: .
@@ -71,9 +66,8 @@ services:
     ports:
       - "5003:5003"
     environment:
-      - JAEGER_AGENT_HOST=jaeger
-      - JAEGER_AGENT_PORT=6831
-      - SERVICE_NAME=driver_service
+      - JAEGER_HOST=jaeger
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
       - PYTHONUNBUFFERED=1
     depends_on:
       - jaeger
