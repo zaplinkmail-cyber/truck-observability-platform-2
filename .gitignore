@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+*.log
+.env
+.DS_Store
+jaeger-badger.db/
+.idea/
+.vscode/
+*.swp
+*.tmp
